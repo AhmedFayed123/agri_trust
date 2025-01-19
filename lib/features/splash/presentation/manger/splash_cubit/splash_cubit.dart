@@ -19,9 +19,9 @@ class SplashCubit extends Cubit<SplashState> {
     final bool isOnboardingSeen = prefs.getBool('onboarding_seen') ?? false;
 
     if (isOnboardingSeen) {
-      context.go(AppRoutes.auth);
+      goRouter.go(AppRoutes.auth);
     } else {
-      context.go(AppRoutes.onBoarding);
+      goRouter.go(AppRoutes.onBoarding);
     }
 
     emit(SplashFinished());
