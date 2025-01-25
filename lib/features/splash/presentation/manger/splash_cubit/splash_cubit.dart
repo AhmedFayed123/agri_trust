@@ -13,7 +13,7 @@ class SplashCubit extends Cubit<SplashState> {
   void startSplash(BuildContext context) async {
     emit(SplashLoading());
 
-    await Future.delayed(const Duration(seconds: 3));
+    await Future.delayed(const Duration(seconds: 5));
 
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final bool isOnboardingSeen = prefs.getBool('onboarding_seen') ?? false;

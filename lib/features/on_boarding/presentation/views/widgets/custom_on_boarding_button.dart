@@ -16,23 +16,23 @@ class CustomOnBoardingButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(right: 20.w),
+      padding: const EdgeInsets.all(20.0),
       child: GestureDetector(
         onTap: onPressed,
         child: Stack(
           alignment: Alignment.centerLeft,
           children: [
             Container(
-              height: 48.h,
-              width: 170.w,
+              height: 48,
+              width: 170,
               decoration: BoxDecoration(
                 color: AppColors.buttonShadow,
                 borderRadius: BorderRadius.circular(25.r),
               ),
             ),
             Container(
-              height: 48.h,
-              width: 145.w,
+              height: 48,
+              width: 145,
               decoration: BoxDecoration(
                 color: AppColors.button,
                 borderRadius: BorderRadius.circular(25.r),

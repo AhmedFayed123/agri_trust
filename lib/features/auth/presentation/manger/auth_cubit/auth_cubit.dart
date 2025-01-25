@@ -1,15 +1,23 @@
+import 'package:agri_trust/core/utils/functions/show_success_bottom_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:agri_trust/features/auth/data/repos/auth_repo_impl.dart';
 import 'package:agri_trust/features/auth/presentation/manger/auth_cubit/auth_state.dart';
 import 'package:go_router/go_router.dart';
+import 'package:location/location.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../../core/router/routes.dart';
+import '../../../../../core/services/token_service.dart';
 import '../../../data/models/user_model.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   final AuthRepoImpl _authRepoImpl;
 
-  AuthCubit(this._authRepoImpl) : super(AuthInitialState());
+  AuthCubit(this._authRepoImpl) : super(AuthInitialState()) {
+    _loadRememberedCredentials();
+  }
+
+  int? userId;
 
   bool _obscurePassword = true;
 
@@ -19,83 +27,64 @@ class AuthCubit extends Cubit<AuthState> {
 
   bool get rememberMe => _rememberMe;
 
-  TextEditingController loginEmailController = TextEditingController();
-  TextEditingController loginPasswordController = TextEditingController();
-  TextEditingController registerEmailController = TextEditingController();
-  TextEditingController registerPasswordController = TextEditingController();
-  TextEditingController firstNameController = TextEditingController();
-  TextEditingController lastNameController = TextEditingController();
-  TextEditingController phoneController = TextEditingController();
+  final TextEditingController loginEmailController = TextEditingController();
+  final TextEditingController loginPasswordController = TextEditingController();
+  final TextEditingController registerEmailController = TextEditingController();
+  final TextEditingController registerPasswordController =
+  TextEditingController();
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
 
-  Future<void> sendResetCode(String phoneNumber, BuildContext context) async {
-    final phoneError = validatePhone(phoneNumber);
 
-    if (phoneError != null) {
-      emit(ResetPasswordErrorState(phoneError: phoneError));
-      return;
-    }
-
+  Future<void> _loadRememberedCredentials() async {
+    emit(AuthLoadingState());
     try {
-      emit(AuthLoadingState());
-      final response = await _authRepoImpl.sendResetPasswordCode(phoneNumber);
-
-      if (response['success']) {
-        emit(ResetPasswordCodeSentState());
-        context.go(AppRoutes.codeVerificationView);
+      final token = await TokenService.getToken();
+      if (token != null && token.isNotEmpty) {
+        final prefs = await SharedPreferences.getInstance();
+        loginEmailController.text = prefs.getString('email') ?? '';
+        loginPasswordController.text = prefs.getString('password') ?? '';
+        _rememberMe = prefs.getBool('remember_me') ?? false;
+        emit(AuthCredentialsLoadedState(_rememberMe));
       } else {
-        emit(ResetPasswordErrorState(phoneError: response['message'] ?? "Failed to send code"));
-
+        emit(AuthErrorState(message: 'لم يتم العثور على توكن.'));
       }
     } catch (e) {
-      emit(ResetPasswordErrorState(phoneError: e.toString()));
-
+      emit(AuthErrorState(message: 'حدث خطأ أثناء تحميل بيانات تسجيل الدخول'));
     }
   }
 
-  Future<void> verifyCode(String code, BuildContext context) async {
-    if (code.isEmpty) {
-      emit(ResetPasswordErrorState(codeError: "Code is required"));
-      return;
-    }
 
+  void toggleRememberMe() async {
+    _rememberMe = !_rememberMe;
+    emit(AuthLoadingState());
     try {
-      emit(AuthLoadingState());
-      final response = await _authRepoImpl.verifyResetCode(code);
-      if (response['success']) {
-        emit(ResetPasswordCodeVerifiedState());
-        context.go(AppRoutes.createNewPassword);
+      if (_rememberMe) {
+        await _saveCredentials();
       } else {
-        emit(ResetPasswordErrorState(codeError: response['message'] ?? "Invalid code"));
+        await _clearCredentials();
       }
+      emit(AuthToggleRememberState(_rememberMe));
     } catch (e) {
-      emit(ResetPasswordErrorState(codeError: e.toString()));
+      emit(AuthErrorState(message: 'حدث خطأ أثناء تغيير إعداد تذكرني'));
     }
   }
 
-  Future<void> updatePassword(String newPassword, String confirmPassword, BuildContext context) async {
-    if (newPassword.isEmpty || confirmPassword.isEmpty) {
-      emit(ResetPasswordErrorState(passwordError: "Password fields are required"));
-      return;
-    }
+  Future<void> _saveCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('email', loginEmailController.text);
+    await prefs.setString('password', loginPasswordController.text);
+    await prefs.setBool('remember_me', true);
+    emit(AuthSuccessState());
+  }
 
-    if (newPassword != confirmPassword) {
-      emit(ResetPasswordErrorState(passwordError: "Passwords do not match"));
-      return;
-    }
-
-    try {
-      emit(AuthLoadingState());
-      final response = await _authRepoImpl.updatePassword(newPassword);
-
-      if (response['success']) {
-        emit(ResetPasswordSuccessState());
-        context.go(AppRoutes.login);
-      } else {
-        emit(ResetPasswordErrorState(passwordError: response['message'] ?? "Failed to update password"));
-      }
-    } catch (e) {
-      emit(ResetPasswordErrorState(passwordError: e.toString()));
-    }
+  Future<void> _clearCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('email');
+    await prefs.remove('password');
+    await prefs.setBool('remember_me', false);
+    emit(AuthSuccessState());
   }
 
   void togglePasswordVisibility() {
@@ -103,41 +92,51 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthInitialState());
   }
 
-  void toggleRememberMe() {
-    _rememberMe = !_rememberMe;
-    emit(AuthInitialState());
-  }
-
   String? validateEmail(String email) {
-    if (email.isEmpty) {
-      return "Email required.";
-    } else if (!RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$").hasMatch(email)) {
-      return "Email is invalid.";
+    email = email.trim();
+    if (email.isEmpty) return "البريد الإلكتروني مطلوب.";
+    if (!RegExp(r"^[\w-\.]+@([\w-]+\.)+[a-zA-Z]{2,}$").hasMatch(email)) {
+      return "البريد الإلكتروني غير صالح.";
     }
     return null;
   }
 
+  bool isPasswordValid(String password) {
+    return password.isNotEmpty && password.length >= 6;
+  }
+
+  bool arePasswordsMatching(String password, String confirmPassword) {
+    return password == confirmPassword;
+  }
+
   String? validatePassword(String password) {
-    if (password.isEmpty) {
-      return "Password required.";
-    } else if (password.length < 6) {
-      return "Password must be at least 6 characters.";
+    password = password.trim();
+    if (password.isEmpty) return "كلمة المرور مطلوبة.";
+    if (password.length < 8) {
+      return "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.";
     }
     return null;
   }
 
   String? validateName(String name) {
-    if (name.isEmpty) {
-      return "Name required.";
-    }
+    name = name.trim();
+    if (name.isEmpty) return "الاسم مطلوب.";
     return null;
   }
 
   String? validatePhone(String phone) {
-    if (phone.isEmpty) {
-      return "Phone number required.";
-    } else if (!RegExp(r"^\+?[0-9]{10,15}$").hasMatch(phone)) {
-      return "Invalid phone number.";
+    phone = phone.trim();
+    if (phone.isEmpty) return "رقم الهاتف مطلوب.";
+    if (!RegExp(r"^\+?[0-9]{7,15}$").hasMatch(phone)) {
+      return "رقم الهاتف غير صالح.";
+    }
+    return null;
+  }
+
+  String? validateRequiredField(String value, String fieldName) {
+    value = value.trim();
+    if (value.isEmpty) {
+      return "$fieldName مطلوب.";
     }
     return null;
   }
@@ -154,59 +153,92 @@ class AuthCubit extends Cubit<AuthState> {
 
     try {
       emit(AuthLoadingState());
+      final location = Location();
+
+      bool serviceEnabled;
+      PermissionStatus permissionGranted;
+      LocationData locationData;
+
+      serviceEnabled = await location.serviceEnabled();
+      if (!serviceEnabled) {
+        serviceEnabled = await location.requestService();
+        if (!serviceEnabled) {
+          emit(LoginErrorState(
+              passwordError: "يجب تفعيل خدمة الموقع لإكمال تسجيل الدخول."));
+          return;
+        }
+      }
+
+      permissionGranted = await location.hasPermission();
+      if (permissionGranted == PermissionStatus.denied) {
+        permissionGranted = await location.requestPermission();
+        if (permissionGranted != PermissionStatus.granted) {
+          emit(LoginErrorState(
+              passwordError: "يجب منح صلاحيات الموقع لإكمال تسجيل الدخول."));
+          return;
+        }
+      }
+
+      locationData = await location.getLocation();
+
+      double latitude = locationData.latitude ?? 0.0;
+      double longitude = locationData.longitude ?? 0.0;
+
       final response = await _authRepoImpl.login(
         loginEmailController.text,
         loginPasswordController.text,
+        longitude,
+        latitude,
       );
-      if (response['success']||false) {
-        emit(LoginSuccessState());
-        // context.go(AppRoutes.home);
+
+      if (response['result'] == true) {
+        final token = response['data']['token'];
+
+        if (token != null && token.isNotEmpty) {
+          await saveToken(token);
+          emit(LoginSuccessState());
+          context.go(AppRoutes.home);
+        } else {
+          emit(LoginErrorState(
+              passwordError: "تم تسجيل الدخول بنجاح ولكن لم يتم استلام توكن."));
+          _showSnackBar(context, 'لم يتم استلام توكن صالح', Colors.orange);
+        }
       } else {
-        emit(LoginErrorState(
-          emailError: null,
-          passwordError: response['message'] ?? "login failed.",
-        ));
+        final errorMessage = response['error_message'] ?? 'فشل في تسجيل الدخول';
+        emit(LoginErrorState(passwordError: errorMessage));
+        _showSnackBar(context, errorMessage, Colors.red);
       }
     } catch (e) {
-      emit(LoginErrorState(
-        emailError: null,
-        passwordError: e.toString(),
-      ));
+      emit(LoginErrorState(passwordError: "حدث خطأ أثناء تسجيل الدخول."));
     }
   }
-
   Future<void> register(BuildContext context) async {
-    final firstNameError = validateName(firstNameController.text);
-    final lastNameError = validateName(lastNameController.text);
-    final emailError = validateEmail(registerEmailController.text);
-    final phoneError = validatePhone(phoneController.text);
-    final passwordError = validatePassword(registerPasswordController.text);
+    final validationErrors = {
+      'firstName': validateName(firstNameController.text),
+      'lastName': validateName(lastNameController.text),
+      'email': validateEmail(registerEmailController.text),
+      'phone': validatePhone(phoneController.text),
+      'password': validatePassword(registerPasswordController.text),
+    };
 
-    if (firstNameError != null ||
-        lastNameError != null ||
-        emailError != null ||
-        phoneError != null ||
-        passwordError != null) {
+    if (validationErrors.values.any((error) => error != null)) {
       emit(RegisterErrorState(
-        firstNameError: firstNameError,
-        lastNameError: lastNameError,
-        emailError: emailError,
-        phoneError: phoneError,
-        passwordError: passwordError,
+        firstNameError: validationErrors['firstName'],
+        lastNameError: validationErrors['lastName'],
+        emailError: validationErrors['email'],
+        phoneError: validationErrors['phone'],
+        passwordError: validationErrors['password'],
       ));
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please check your inputs and try again.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showSnackBar(context,
+          'يرجى التحقق من المدخلات الخاصة بك وحاول مرة أخرى.', Colors.red);
       return;
     }
 
     try {
       emit(AuthLoadingState());
-      final user = User(
+
+      final registerRequest = RegisterRequestModel(
         firstName: firstNameController.text,
         lastName: lastNameController.text,
         email: registerEmailController.text,
@@ -214,64 +246,173 @@ class AuthCubit extends Cubit<AuthState> {
         password: registerPasswordController.text,
       );
 
-      final response = await _authRepoImpl.register(user);
-      if (response['success']) {
-        emit(RegisterSuccessState());
+      final response = await _authRepoImpl.register(registerRequest);
+      print(response);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Registration Successful!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+      if (response['user'] != null) {
+        final token = response['token'];
+        if (token != null && token != 0) {
+          await saveToken(token);
+          emit(RegisterSuccessState());
+          _showSnackBar(context, 'تم التسجيل بنجاح!', Colors.green);
+        } else {
+          emit(RegisterErrorState());
+          _showSnackBar(context,
+              'تم التسجيل بنجاح، ولكن لم يتم استلام توكن صالح.', Colors.orange);
+        }
       } else {
-        emit(RegisterErrorState(
-          firstNameError: firstNameError,
-          lastNameError: lastNameError,
-          emailError: emailError,
-          phoneError: phoneError,
-          passwordError: passwordError,
-        ));
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(response['message'] ?? 'Registration failed'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        emit(RegisterErrorState());
+        _showSnackBar(context, 'مسجل بالفعل', Colors.red);
       }
     } catch (e) {
-      emit(RegisterErrorState(
-        firstNameError: firstNameError,
-        lastNameError: lastNameError,
-        emailError: emailError,
-        phoneError: phoneError,
-        passwordError: passwordError,
-      ));
+      emit(RegisterErrorState());
+      _showSnackBar(context, 'مسجل بالفعل', Colors.red);
+    }
+  }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('An error occurred: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
+  Future<void> saveToken(String token) async {
+    await TokenService.saveToken(token);
+  }
+
+  Future<String?> getToken() async {
+    return await TokenService.getToken();
+  }
+  Future<void> sendResetCode(String phoneNumber, BuildContext context) async {
+    final phoneError = validatePhone(phoneNumber);
+
+    if (phoneError != null) {
+      emit(ResetPasswordErrorState(phoneError: phoneError));
+      return;
+    }
+
+    try {
+      emit(AuthLoadingState());
+
+      final response = await _authRepoImpl.sendResetPasswordCode(phoneNumber);
+
+      if (response['result'] == true) {
+        final otp = response['data']['otp'];
+        userId = response['data']['user_id'];
+        final expiresAt = response['data']['expires_at'];
+
+        emit(ResetPasswordCodeSentState());
+        context.go(
+          AppRoutes.codeVerificationView,
+          extra: {'id': userId, 'phoneNumber': phoneNumber},
+        );
+        checkOtp(otp, userId!, context);
+        print(userId);
+      } else {
+        emit(ResetPasswordErrorState());
+        _showSnackBar(context, "فشل في إرسال الرمز", Colors.red);
+      }
+    } catch (e) {
+      emit(ResetPasswordErrorState());
+    }
+  }
+
+  Future<void> checkOtp(String otp, int userId, BuildContext context) async {
+    try {
+      emit(AuthLoadingState());
+
+      final response = await _authRepoImpl.checkOtp(otp, userId);
+
+      if (response['result'] == true) {
+        if (response['data'][0]['expires_at'] == "not expired") {
+          emit(ResetPasswordSuccessState());
+          context.go(
+            AppRoutes.createNewPassword,
+            extra: {
+              'id': userId,
+            },
+          );
+        } else {
+          emit(ResetPasswordErrorState(phoneError: "انتهت صلاحية الرمز"));
+          _showSnackBar(context, "انتهت صلاحية الرمز", Colors.red);
+        }
+      } else {
+        emit(ResetPasswordErrorState(phoneError: "رمز غير صالح"));
+        _showSnackBar(context, "رمز غير صالح", Colors.red);
+      }
+    } catch (e) {
+      emit(ResetPasswordErrorState(phoneError: "حدث خطأ أثناء التحقق"));
+    }
+  }
+
+  Future<void> updatePassword(
+    String newPassword,
+    String confirmPassword,
+    BuildContext context,
+    int userId,
+  ) async {
+    if (newPassword.isEmpty || confirmPassword.isEmpty) {
+      emit(ResetPasswordErrorState(passwordError: "كلمة المرور مطلوبة"));
+      return;
+    }
+
+    if (newPassword != confirmPassword) {
+      emit(ResetPasswordErrorState(passwordError: "كلمات المرور غير متطابقة"));
+      return;
+    }
+
+    try {
+      emit(AuthLoadingState());
+
+      final response = await _authRepoImpl.updatePassword(
+        newPassword,
+        userId,
+        confirmPassword,
       );
+
+      if (response.containsKey('result') && response['result'] == true) {
+        if (response['data_status'] == true) {
+          emit(ResetPasswordSuccessState());
+          showSuccessBottomDialog(context);
+        } else {
+          emit(ResetPasswordErrorState(
+            passwordError: response['error_message'] ?? "فشل تحديث كلمة المرور",
+          ));
+        }
+      } else {
+        emit(ResetPasswordErrorState(
+          passwordError: response['error'] ?? "فشل تحديث كلمة المرور",
+        ));
+      }
+    } catch (e) {
+      emit(ResetPasswordErrorState(passwordError: "حدث خطأ غير متوقع"));
     }
   }
 
   void switchToLoginView() {
+    _clearRegistrationFields();
+    emit(LoginViewState());
+  }
+
+  void switchToRegisterView() {
+    _clearLoginFields();
+    emit(RegisterViewState());
+  }
+
+  void _clearLoginFields() {
+    loginEmailController.clear();
+    loginPasswordController.clear();
+  }
+
+  void _clearRegistrationFields() {
     registerEmailController.clear();
     registerPasswordController.clear();
     firstNameController.clear();
     lastNameController.clear();
     phoneController.clear();
-    emit(LoginViewState());
   }
 
-  void switchToRegisterView() {
-    loginEmailController.clear();
-    loginPasswordController.clear();
-    emit(RegisterViewState());
+
+  void _showSnackBar(BuildContext context, String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: color),
+    );
   }
+
 
   @override
   Future<void> close() {

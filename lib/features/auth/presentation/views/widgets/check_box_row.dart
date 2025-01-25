@@ -26,7 +26,7 @@ class CheckBoxRow extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(1.5)),
                   value: context.read<AuthCubit>().rememberMe,
-                  onChanged: (_) {
+                  onChanged: (value) {
                     context.read<AuthCubit>().toggleRememberMe();
                   },
                 );

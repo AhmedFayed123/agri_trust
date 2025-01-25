@@ -6,10 +6,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../../core/constant/app_colors.dart';
 import '../../../../../core/constant/app_strings.dart';
+import '../../../../../core/constant/app_styles.dart';
 import '../../../../../core/resources/assets_path.dart';
 import '../../../../../core/router/routes.dart';
 import '../../../../../core/utils/widgets/custom_app_bar.dart';
-import 'camera_or_gallery_row.dart';
 import 'custom_scanner_text_column.dart';
 
 class ScanBarcodeViewBody extends StatelessWidget {
@@ -54,8 +54,42 @@ class ScanBarcodeViewBody extends StatelessWidget {
                 title: AppStrings.insertBarCode,
                 desc: AppStrings.insertBarCodeDesc,
               ),
-              SizedBox(height: 20.h),
-              const CameraOrGalleryRow(),
+              SizedBox(height: 50.h),
+              // const CameraOrGalleryRow(),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    height: 60.h,
+                    width: 60.w,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.secondary,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.secondary.withOpacity(0.4),
+                          spreadRadius: 4,
+                          blurRadius: 12,
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Image.asset(
+                        AssetsPath.scanCode,
+                        width: 30.w,
+                        height: 30.h,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    AppStrings.camera,
+                    style: AppStyles.bodyText14.copyWith(
+                      color: AppColors.black2,
+                    ),
+                  ),
+                ],
+              ),
             ],
           )
         ],

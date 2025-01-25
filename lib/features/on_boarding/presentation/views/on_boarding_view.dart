@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constant/app_strings.dart';
-import '../../../../core/resources/assets_path.dart';
 import '../../../../core/router/routes.dart';
+import '../../data/repos/on_boarding_repo_impl.dart';
 import '../manger/on_boarding_cubit/onboarding_cubit.dart';
 import '../manger/on_boarding_cubit/onboarding_state.dart';
 import 'widgets/custom_on_boarding_button.dart';
@@ -13,106 +13,98 @@ import 'widgets/on_boarding_app_bar.dart';
 import 'widgets/on_boarding_page.dart';
 
 class OnBoardingView extends StatelessWidget {
-  OnBoardingView({super.key});
+  final PageController _pageController = PageController();
 
-  final onboardingPages = [
-    const OnBoardingPage(
-      imagePath: AssetsPath.onBoardingQrCodeImage,
-      title: AppStrings.easyToScanTitle,
-      description: AppStrings.easyToScanDescription,
-    ),
-    const OnBoardingPage(
-      imagePath: AssetsPath.myPasswordImage,
-      title: AppStrings.easyToManageTitle,
-      description: AppStrings.easyToManageDescription,
-      isSecondScreen: true,
-    ),
-    const OnBoardingPage(
-      imagePath: AssetsPath.onBoardingQrCodeImage,
-      title: AppStrings.easyToTrustTitle,
-      description: AppStrings.easyToTrustDescription,
-    ),
-  ];
+  OnBoardingView({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => OnboardingCubit(),
+      create: (context) =>
+      OnBoardingCubit(OnBoardingRepoImpl())..fetchOnBoardingData(),
       child: Scaffold(
-        body: BlocConsumer<OnboardingCubit, OnboardingState>(
+        body: BlocConsumer<OnBoardingCubit, OnBoardingState>(
           listener: (context, state) {
             if (state is OnboardingCompleted) {
               context.go(AppRoutes.auth);
             }
           },
           builder: (context, state) {
-            final cubit = context.read<OnboardingCubit>();
-            PageController pageController =
-            PageController(initialPage: cubit.currentPage);
+            final cubit = context.read<OnBoardingCubit>();
 
-            return SafeArea(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  double screenHeight = constraints.maxHeight;
-                  double screenWidth = constraints.maxWidth;
-
-                  return SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        OnBoardingAppBar(
-                          currentPage: cubit.currentPage,
-                          totalPages: 3,
-                          onBackPressed: () {
-                            cubit.updatePage(cubit.currentPage - 1);
-                            pageController.previousPage(
+            if (state is OnBoardingLoading) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (state is OnBoardingError) {
+              return Center(
+                child: Text(
+                  state.message,
+                  style: TextStyle(color: Colors.red, fontSize: 16.sp),
+                ),
+              );
+            } else if (state is OnBoardingLoaded) {
+              return SafeArea(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // AppBar
+                      OnBoardingAppBar(
+                        currentPage: cubit.currentPage,
+                        totalPages: cubit.onboardingPages.length,
+                        onBackPressed: () {
+                          if (cubit.currentPage > 0) {
+                            _pageController.previousPage(
                               duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeIn,
+                              curve: Curves.easeInOut,
+                            );
+                          }
+                        },
+                        onSkipPressed: cubit.completeOnboarding,
+                      ),
+                      SizedBox(height: 20.h),
+
+                      // PageView
+                      SizedBox(
+                        height: .6.sh,
+                        child: PageView.builder(
+                          controller: _pageController,
+                          itemCount: cubit.onboardingPages.length,
+                          onPageChanged: cubit.updatePage,
+                          itemBuilder: (context, index) {
+                            final page = cubit.onboardingPages[index];
+                            return OnBoardingPage(
+                              imageUrl: page.img,
+                              title: page.name,
+                              description: page.details,
                             );
                           },
-                          onSkipPressed: () {
-                            cubit.completeOnboarding();
-                          },
                         ),
-
-                        SizedBox(height: 20.h),
-
-                        SizedBox(
-                          height: screenHeight * 0.6,
-                          child: PageView.builder(
-                            controller: pageController,
-                            onPageChanged: (index) => cubit.updatePage(index),
-                            itemCount: onboardingPages.length,
-                            itemBuilder: (context, index) =>
-                            onboardingPages[index],
-                          ),
-                        ),
-                        SizedBox(height: 20.h),
-
-                        cubit.currentPage == onboardingPages.length - 1
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: cubit.currentPage == cubit.onboardingPages.length - 1
                             ? CustomOnBoardingButton(
                           text: AppStrings.getStarted,
-                          onPressed: () {
-                            cubit.completeOnboarding();
-                          },
+                          onPressed: cubit.completeOnboarding,
                         )
                             : CustomOnBoardingButton(
                           text: AppStrings.next,
                           onPressed: () {
-                            cubit.updatePage(cubit.currentPage + 1);
-                            pageController.nextPage(
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeIn,
-                            );
+                            if (cubit.currentPage < cubit.onboardingPages.length - 1) {
+                              _pageController.nextPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
+                            }
                           },
                         ),
-                        SizedBox(height: 20.h),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            );
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            return const SizedBox.shrink();
           },
         ),
       ),

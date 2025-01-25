@@ -1,11 +1,27 @@
-abstract class OnboardingState {}
+import '../../../data/models/on_boarding_model.dart';
 
-class OnboardingInitial extends OnboardingState {}
+abstract class OnBoardingState {}
 
-class OnboardingPageChanged extends OnboardingState {
-  final int currentPage;
+class OnBoardingInitial extends OnBoardingState {}
 
-  OnboardingPageChanged(this.currentPage);
+class OnBoardingLoading extends OnBoardingState {}
+
+class OnBoardingLoaded extends OnBoardingState {
+  final OnBoardingResponse response;
+
+  OnBoardingLoaded(this.response);
 }
 
-class OnboardingCompleted extends OnboardingState {}
+class OnBoardingError extends OnBoardingState {
+  final String message;
+
+  OnBoardingError(this.message);
+}
+
+class OnBoardingPageChanged extends OnBoardingState {
+  final int currentPage;
+
+  OnBoardingPageChanged(this.currentPage);
+}
+
+class OnboardingCompleted extends OnBoardingState {}

@@ -8,7 +8,7 @@ class AppStrings {
   static const String getStarted = 'ابدأ الأن';
   static const String digitalCode = 'أدخل 4 كود رقمي';
   static const String digitalCodeSubTitle =
-      'أدخل الرمز المكون من 4 أرقام الذي سيصلك على هاتفك (010203040506).';
+      'أدخل الرمز المكون من 4 أرقام الذي سيصلك على هاتفك ';
   static const String phoneNotReceived = 'الكود لم يصل؟';
   static const String resendCode = 'إعادة إرسال الرمز';
 
@@ -81,12 +81,13 @@ class AppStrings {
   static const String successfulReplacement = 'عملية استبدال ناجحة';
   static const String remainingPoints450 = 'النقاط المتبقية : 450 نقطة';
   static const String savedSuccessfully = 'تم الحفظ بنجاح';
-  static const String passwordUpdatedSuccessfully= 'تم تحديث كلمة المرور\n بنجاح!';
+  static const String passwordUpdatedSuccessfully =
+      'تم تحديث كلمة المرور\n بنجاح!';
   static const String viewInGallery = 'الإطلاع في معرض الصور';
   static const String productScan = 'فحص المنتج';
   static const String insertBarCode = 'قم بإدراج باركود المنتج';
   static const String insertBarCodeDesc =
-      'ارفع باركود المنتج المراد فحصه من\n معرض الصور أو بالكاميرا مباشرة';
+      'ارفع باركود المنتج المراد فحصه بالكاميرا مباشرة';
   static const String checkNow = 'تحقق الآن';
   static const String save = 'حفظ';
   static const String share = 'مشاركة';
@@ -95,4 +96,5 @@ class AppStrings {
       'بعد الانتهاء من التحميل يمكنك عرض\n نتيجة الفحص';
   static const String loading = 'جار التحميل';
   static const String settings = 'الإعدادت';
+  static const String products = 'المنتجات';
 }

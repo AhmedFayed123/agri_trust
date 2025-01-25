@@ -1,5 +1,7 @@
+// Abstract base class for all authentication states
 abstract class AuthState {}
 
+// General States
 class AuthInitialState extends AuthState {}
 
 class AuthLoadingState extends AuthState {}
@@ -14,6 +16,9 @@ class AuthFailureState extends AuthState {
 
 class AuthLoggedOutState extends AuthState {}
 
+// Login States
+class LoginViewState extends AuthState {}
+
 class LoginSuccessState extends AuthState {}
 
 class LoginErrorState extends AuthState {
@@ -22,6 +27,10 @@ class LoginErrorState extends AuthState {
 
   LoginErrorState({this.emailError, this.passwordError});
 }
+
+// Register States
+class RegisterViewState extends AuthState {}
+
 class RegisterSuccessState extends AuthState {}
 
 class RegisterErrorState extends AuthState {
@@ -39,11 +48,25 @@ class RegisterErrorState extends AuthState {
     this.passwordError,
   });
 }
+class AuthCredentialsLoadedState extends AuthState {
+  final bool rememberMe;
 
-class LoginViewState extends AuthState {}
+  AuthCredentialsLoadedState(this.rememberMe);
+}
 
-class RegisterViewState extends AuthState {}
-class ResetPasswordCodeSentState extends AuthState {}
+class AuthToggleRememberState extends AuthState {
+  final bool rememberMe;
+
+  AuthToggleRememberState(this.rememberMe);
+}
+
+
+class AuthErrorState extends AuthState {
+  final String message;
+
+  AuthErrorState({required this.message});
+}
+// Reset Password States
 
 class ResetPasswordCodeVerifiedState extends AuthState {}
 
@@ -54,5 +77,15 @@ class ResetPasswordErrorState extends AuthState {
   final String? codeError;
   final String? passwordError;
 
-  ResetPasswordErrorState({this.phoneError, this.codeError, this.passwordError});
+  ResetPasswordErrorState({
+    this.phoneError,
+    this.codeError,
+    this.passwordError,
+  });
 }
+
+
+class ResetPasswordCodeSentState extends AuthState {
+
+}
+

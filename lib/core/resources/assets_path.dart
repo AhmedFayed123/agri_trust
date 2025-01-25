@@ -10,7 +10,7 @@ class AssetsPath {
   static const String history = 'assets/images/ic_twotone-history.png';
   static const String home = 'assets/images/si_home-line.png';
   static const String streamIcon = 'assets/images/icon_Stream.png';
-  static const String profile = 'assets/images/Rectangle 4158.png';
+  static const String profile = 'assets/images/user.jpg';
   static const String advertisement = 'assets/images/Group 18.png';
   static const String bag = 'assets/images/Rectangle 596.png';
   static const String gift = 'assets/images/gift.png';

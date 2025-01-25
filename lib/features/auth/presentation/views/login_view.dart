@@ -11,10 +11,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:agri_trust/features/auth/presentation/manger/auth_cubit/auth_cubit.dart';
 import 'package:agri_trust/features/auth/presentation/manger/auth_cubit/auth_state.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/constant/app_colors.dart';
-import '../../../../core/router/routes.dart';
 
 class LoginView extends StatelessWidget {
   const LoginView({super.key});
@@ -58,8 +56,7 @@ class LoginView extends StatelessWidget {
                   CustomButton(
                     title: AppStrings.login,
                     onPressed: () {
-                      // cubit.loginWithEmail(context);
-                      context.go(AppRoutes.home);
+                      cubit.loginWithEmail(context);
                     },
                     isLoading: state is AuthLoadingState,
                     buttonColor: AppColors.customGreen,
@@ -68,30 +65,30 @@ class LoginView extends StatelessWidget {
                     padding:
                     EdgeInsets.symmetric(vertical: 16.h, horizontal: 24.w),
                   ),
-                  SizedBox(height: 50.h),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const LineWidget(),
-                      Text(
-                        AppStrings.orLoginWith,
-                        style: AppStyles.bodyText12,
-                      ),
-                      const LineWidget(),
-                    ],
-                  ),
-                  SizedBox(height: 20.h),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      SocialItem(
-                        onPressed: () {}, imagePath: AssetsPath.google,),
-                      SocialItem(
-                        onPressed: () {}, imagePath: AssetsPath.faceBook,),
-                      SocialItem(
-                        onPressed: () {}, imagePath: AssetsPath.apple,),
-                    ],
-                  ),
+                  // SizedBox(height: 50.h),
+                  // Row(
+                  //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  //   children: [
+                  //     const LineWidget(),
+                  //     Text(
+                  //       AppStrings.orLoginWith,
+                  //       style: AppStyles.bodyText12,
+                  //     ),
+                  //     const LineWidget(),
+                  //   ],
+                  // ),
+                  // SizedBox(height: 20.h),
+                  // Row(
+                  //   mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  //   children: [
+                  //     SocialItem(
+                  //       onPressed: () {}, imagePath: AssetsPath.google,),
+                  //     SocialItem(
+                  //       onPressed: () {}, imagePath: AssetsPath.faceBook,),
+                  //     SocialItem(
+                  //       onPressed: () {}, imagePath: AssetsPath.apple,),
+                  //   ],
+                  // ),
                 ],
               ),
             );

@@ -1,17 +1,38 @@
-import 'package:agri_trust/core/constant/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
-import '../../constant/app_colors.dart';
-import '../../constant/app_strings.dart';
-import '../../constant/app_styles.dart';
-import '../../resources/assets_path.dart';
+import '../../../../../core/constant/app_icons.dart';
+import '../../../../../core/constant/app_colors.dart';
+import '../../../../../core/constant/app_strings.dart';
+import '../../../../../core/constant/app_styles.dart';
+import '../../../../../core/resources/assets_path.dart';
 
 class CustomProductItem extends StatelessWidget {
-  const CustomProductItem({super.key});
+  final String itemTitle;
+  final String details;
+  final String scanStatus;
+
+  const CustomProductItem({
+    super.key,
+    required this.itemTitle,
+    required this.details,
+
+    required this.scanStatus,
+  });
 
   @override
   Widget build(BuildContext context) {
+    Icon scanIcon = scanStatus == "success"
+        ? const Icon(
+      AppIcons.checkCircle,
+      color: AppColors.secondary,
+      size: 34,
+    )
+        : const Icon(
+      AppIcons.error,
+      color: AppColors.bernRed,
+      size: 34,
+    );
+
     return Padding(
       padding: EdgeInsets.only(top: 12.0.h),
       child: Center(
@@ -47,11 +68,7 @@ class CustomProductItem extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Icon(
-                      AppIcons.checkCircle,
-                      color: AppColors.secondary,
-                      size: 34,
-                    ),
+                    scanIcon,
                     Row(
                       children: [
                         Column(
@@ -59,18 +76,11 @@ class CustomProductItem extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              AppStrings.itemTitle,
+                              itemTitle,
                               style: AppStyles.tajawal14,
                             ),
                             Row(
                               children: [
-                                Text(
-                                  AppStrings.date,
-                                  style: AppStyles.tajawal14.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                    color: AppColors.gray2,
-                                  ),
-                                ),
                                 Text(
                                   AppStrings.dash,
                                   style: AppStyles.tajawal14.copyWith(
@@ -79,7 +89,7 @@ class CustomProductItem extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  AppStrings.giftPoints,
+                                  details,
                                   style: AppStyles.tajawal14.copyWith(
                                     fontWeight: FontWeight.w500,
                                     color: AppColors.gray2,
@@ -104,23 +114,23 @@ class CustomProductItem extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(height: 10.h,),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    AppStrings.itemDesc,
-                    style: AppStyles.tajawal14,
-                  ),
-                  Text(
-                    AppStrings.itemDescCode,
-                    style: AppStyles.tajawal14.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.listItemBorder,
-                    ),
-                  ),
-                ],
-              )
+              SizedBox(height: 10.h),
+              // Column(
+              //   crossAxisAlignment: CrossAxisAlignment.end,
+              //   children: [
+              //     Text(
+              //       itemDesc,
+              //       style: AppStyles.tajawal14,
+              //     ),
+              //     Text(
+              //       itemDescCode,
+              //       style: AppStyles.tajawal14.copyWith(
+              //         fontWeight: FontWeight.w500,
+              //         color: AppColors.listItemBorder,
+              //       ),
+              //     ),
+              //   ],
+              // ),
             ],
           ),
         ),

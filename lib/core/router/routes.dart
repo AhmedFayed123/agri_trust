@@ -16,4 +16,5 @@ class AppRoutes {
   static const String forgetPassword = '/forgetPassword';
   static const String codeVerificationView = '/codeVerificationView';
   static const String createNewPassword = '/createNewPassword';
+  static const String barcodeWebView = '/barcodeWebView';
 }

@@ -1,28 +1,18 @@
-import 'package:equatable/equatable.dart';
 
-abstract class ProductState extends Equatable {
-  const ProductState();
+abstract class ScanProductState {}
 
-  @override
-  List<Object> get props => [];
+class ScanProductInitial extends ScanProductState {}
+
+class ScanProductLoading extends ScanProductState {}
+
+class ScanProductSuccess extends ScanProductState {
+  final dynamic data;
+
+  ScanProductSuccess(this.data);
 }
 
-class ProductInitial extends ProductState {}
+class ScanProductError extends ScanProductState {
+  final String errorMessage;
 
-class ProductScanned extends ProductState {
-  final String barcode;
-
-  const ProductScanned(this.barcode);
-
-  @override
-  List<Object> get props => [barcode];
-}
-
-class ProductError extends ProductState {
-  final String message;
-
-  const ProductError(this.message);
-
-  @override
-  List<Object> get props => [message];
+  ScanProductError(this.errorMessage);
 }

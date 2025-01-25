@@ -79,7 +79,7 @@ class CustomTextFormField extends StatelessWidget {
                   ),
                   borderSide: const BorderSide(
                     color: AppColors.border,
-                    width: 1.5,
+                    width: 1,
                   ),
                 ),
                 errorText: errorText,

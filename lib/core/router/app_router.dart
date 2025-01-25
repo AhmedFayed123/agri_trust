@@ -8,15 +8,12 @@ import 'package:agri_trust/features/auth/presentation/views/register_view.dart';
 import 'package:agri_trust/features/history/presentaion/views/history_view.dart';
 import 'package:agri_trust/features/home/presentation/views/settings_view.dart';
 import 'package:agri_trust/features/on_boarding/presentation/views/on_boarding_view.dart';
-import 'package:agri_trust/features/qr_code_scanner/presentation/views/barcode_confirmation_view.dart';
-import 'package:agri_trust/features/qr_code_scanner/presentation/views/loading_view.dart';
-import 'package:agri_trust/features/qr_code_scanner/presentation/views/product_details_view.dart';
-import 'package:agri_trust/features/wallet/presentation/views/wallet_view.dart';
+import 'package:agri_trust/features/qr_code_scanner/presentation/views/widgets/scan_barcode_scanner_area.dart';
+
 import 'package:go_router/go_router.dart';
 
 import '../../features/home/presentation/views/home_view.dart';
 import '../../features/qr_code_scanner/presentation/views/scan_barcode_view.dart';
-import '../../features/qr_code_scanner/presentation/views/second_barcode_confirmation_view.dart';
 import '../../features/splash/presentation/views/splash_view.dart';
 
 final GoRouter appRouter = GoRouter(
@@ -53,35 +50,35 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.scanBarcodeView,
       builder: (context, state) => const ScanBarcodeView(),
     ),
-    GoRoute(
-      path: AppRoutes.barcodeConfirmationView,
-      builder: (context, state) {
-        final scannedCode = state.extra as String? ?? 'defaultCode';
-        return BarcodeConfirmationView(scannedCode: scannedCode);
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.secondBarcodeConfirmationView,
-      builder: (context, state) {
-        final scannedCode = state.extra as String? ?? 'defaultCode';
-        return SecondBarcodeConfirmationView(scannedCode: scannedCode);
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.productDetails,
-      builder: (context, state) {
-        final scannedCode = state.extra as String? ?? 'defaultCode';
-        return ProductDetailsView(scannedCode: scannedCode);
-      },
-    ),
-    GoRoute(
-      path: AppRoutes.wallet,
-      builder: (context, state) => const WalletView(),
-    ),
-    GoRoute(
-      path: AppRoutes.loadingScreen,
-      builder: (context, state) => const LoadingView(),
-    ),
+    // GoRoute(
+    //   path: AppRoutes.barcodeConfirmationView,
+    //   builder: (context, state) {
+    //     final scannedCode = state.extra as String? ?? 'defaultCode';
+    //     return BarcodeConfirmationView(scannedCode: scannedCode);
+    //   },
+    // ),
+    // GoRoute(
+    //   path: AppRoutes.secondBarcodeConfirmationView,
+    //   builder: (context, state) {
+    //     final scannedCode = state.extra as String? ?? 'defaultCode';
+    //     return SecondBarcodeConfirmationView(scannedCode: scannedCode);
+    //   },
+    // ),
+    // GoRoute(
+    //   path: AppRoutes.productDetails,
+    //   builder: (context, state) {
+    //     final scannedCode = state.extra as String? ?? 'defaultCode';
+    //     return ProductDetailsView(scannedCode: scannedCode);
+    //   },
+    // ),
+    // GoRoute(
+    //   path: AppRoutes.wallet,
+    //   builder: (context, state) => const WalletView(),
+    // ),
+    // GoRoute(
+    //   path: AppRoutes.loadingScreen,
+    //   builder: (context, state) => const LoadingView(),
+    // ),
     GoRoute(
       path: AppRoutes.settings,
       builder: (context, state) => const SettingsView(),
@@ -92,11 +89,27 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.codeVerificationView,
-      builder: (context, state) => const CodeVerificationView(),
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>;
+        final id = extra['id'] as int;
+        final phoneNumber = extra['phoneNumber'] as String;
+        return CodeVerificationView(phoneNumber: phoneNumber, id: id);
+      },
     ),
     GoRoute(
       path: AppRoutes.createNewPassword,
-      builder: (context, state) => const CreateNewPasswordView(),
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>;
+        final id = extra['id'] as int;
+        return CreateNewPasswordView(userId: id,);
+      },
+    ),
+    GoRoute(
+      path: AppRoutes.barcodeWebView,
+      builder: (context, state) {
+        final scannedUrl = state.extra as String;
+        return BarcodeWebView(url: scannedUrl);
+      },
     ),
   ],
 );

@@ -1,11 +1,11 @@
-class User {
+class RegisterRequestModel {
   final String firstName;
   final String lastName;
   final String email;
   final String phone;
   final String password;
 
-  User({
+  RegisterRequestModel({
     required this.firstName,
     required this.lastName,
     required this.email,
@@ -13,23 +13,36 @@ class User {
     required this.password,
   });
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toMap() {
     return {
-      'first_name': firstName,
-      'last_name': lastName,
+      'f_name': firstName,
+      'l_name': lastName,
       'email': email,
       'phone': phone,
       'password': password,
     };
   }
+}
+class LoginRequestModel {
+  final String email;
+  final String password;
+  final double longitude;
+  final double latitude;
 
-  factory User.fromJson(Map<String, dynamic> json) {
-    return User(
-      firstName: json['first_name'],
-      lastName: json['last_name'],
-      email: json['email'],
-      phone: json['phone'],
-      password: json['password'],
-    );
+  LoginRequestModel({
+    required this.email,
+    required this.password,
+    required this.longitude,
+    required this.latitude,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'email': email,
+      'password': password,
+      'longitude': longitude,
+      'latitude': latitude,
+    };
   }
 }
+
